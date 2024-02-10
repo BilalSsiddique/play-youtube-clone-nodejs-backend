@@ -20,35 +20,24 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const { username, fullName, email, password } = req.body;
 
-  // validate
+  // validate fields
   validation.ValidateEmptyFields(fullName, username, email, password);
   validation.validateStringLength(username, 4, 25);
 
-  // check if user exists
+  // check if user exists in database
   const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   });
 
-  if (existedUser) {
-    throw new ApiError(409, "User with email or username already Exists");
-  }
+  //validate existing user
+  validation.validateExistingUser(existedUser)
+ 
+  //validate localImageFilePath => means file are received from user or not.
+  const avatarImageLocalPath = validation.validateAvatarImageLocalPath(req)
+  const coverImageLocalPath = validation.validateCoverImageLocalPath(req);
 
-  const avatarImageLocalPath = req.files?.avatar[0]?.path;
-  
 
-  let coverImageLocalPath;
-  if (
-    req.files &&
-    Array.isArray(req.files.coverImage) &&
-    req.files.coverImage.length > 0
-  ) {
-    coverImageLocalPath = req.files.coverImage[0].path;
-  }
-  
-  if (!avatarImageLocalPath) {
-    throw new ApiError(400, "Avatar file is required");
-  }
-
+  // upload to cloudinary
   const avatarImage = await uploadOnCloudinary(avatarImageLocalPath);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 

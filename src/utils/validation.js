@@ -16,7 +16,35 @@ const validation = {
       );
     }
   },
-  
+  validateExistingUser(existedUser) {
+    if (existedUser) {
+      throw new ApiError(409, "User with email or username already Exists");
+    }
+  },
+
+  validateCoverImageLocalPath(req) {
+
+    if (
+      req.files &&
+      Array.isArray(req.files.coverImage) &&
+      req.files.coverImage.length > 0
+    ) {
+      return req.files.coverImage[0].path;
+    } else {
+      return "";
+    }
+  },
+  validateAvatarImageLocalPath(req) {
+    if (
+      req.files &&
+      Array.isArray(req.files.avatar) &&
+      req.files.avatar.length > 0
+    ) {
+      return req.files.avatar[0].path;
+    } else {
+      throw new ApiError(400, "Avatar file is required");
+    }
+  },
 };
 
 export default validation;
