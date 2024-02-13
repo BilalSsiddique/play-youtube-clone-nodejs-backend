@@ -96,7 +96,10 @@ const loginUser = asyncHandler(async (req, res) => {
   */
   const { email, username, password } = req.body;
 
-  validation.validateUserFields(username, email, password);
+  if (!email){
+    throw new ApiError(400,'email is required')
+  }
+  validation.validateUserPassword(password);
 
   const user = await User.findOne({
     $or: [{ username }, { email }],
@@ -218,8 +221,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .cookie("accessToken",accessToken,options)
-      .cookie("refreshToken",refreshToken, options)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
       .json(
         new ApiResponse(
           200,
@@ -231,4 +234,50 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, error?.message || "Invalid refresh token");
   }
 });
-export { registerUser, loginUser, logOutUser, refreshAccessToken };
+
+const changeUserPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  const user = await User.findById(req.user?._id);
+
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Invalid old password");
+  }
+
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = req.user;
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "current user fetched successfully."));
+});
+
+const updateAccountDetails = asyncHandler((req, res) => {
+  //depends what is allowed to be updated.
+  const { fullName, email } = req.body;
+  console.log("chec", fullName, email);
+  validation.validateUserFields(fullName, email, "All fields are required.");
+
+  
+
+});
+
+export {
+  registerUser,
+  loginUser,
+  logOutUser,
+  refreshAccessToken,
+  getCurrentUser,
+  changeUserPassword,
+  updateAccountDetails,
+};

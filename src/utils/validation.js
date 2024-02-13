@@ -23,7 +23,6 @@ const validation = {
   },
 
   validateCoverImageLocalPath(req) {
-
     if (
       req.files &&
       Array.isArray(req.files.coverImage) &&
@@ -46,14 +45,16 @@ const validation = {
     }
   },
 
-  validateUserFields(username,email,password){
-    if (!(username || email)){
-      throw new ApiError(400,'username or email is required')
+  validateUserFields(username, email,message) {
+    if (!username || !email) {
+      throw new ApiError(400,message);
     }
-    if (!password){
-      throw new ApiError(400,'password is required.')
+  },
+  validateUserPassword(password) {
+    if (!password) {
+      throw new ApiError(400, "password is required.");
     }
-  }
+  },
 };
 
 export default validation;
