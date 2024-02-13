@@ -1,5 +1,11 @@
 # Play - YouTube Clone
 
+## ERD
+
+![image](https://github.com/BilalSsiddique/play-youtube-clone-nodejs-backend/assets/64930024/271906e5-1916-42c1-9190-6ff113a1493c)
+![image](https://github.com/BilalSsiddique/play-youtube-clone-nodejs-backend/assets/64930024/ac8ac284-0865-45b1-8f13-060f0065dd61)
+
+ 
 ## Overview
 
 Welcome to Play, a YouTube clone project developed using production level standards.
@@ -8,18 +14,20 @@ Welcome to Play, a YouTube clone project developed using production level standa
 
 - **User Authentication:** Secure registration and login.
 - **Video Management:** Easy upload, edit, and deletion.
-- **Video Playback:** Smooth support for various formats.
-- **User Interaction:** Like, comment, and share videos.
+- **Video Playback:** Smooth support for various formats. => coming soon
+- **User Interaction:** Like & comment.
 - **Subscription System:** Subscribe to channels for updates.
-- **Search Functionality:** Efficient video and channel search.
-- **Responsive Design:** Enjoy on any device.
+- **Search Functionality:** Efficient video and channel search. => coming soon
+- **Responsive Design:** Enjoy on any device.  => coming soon
 
 ## Technologies Used
 
-- **Frontend:** HTML5, CSS3, JavaScript, React.js
-- **Backend:** Node.js, Express.js
+- **Frontend:** HTML5, CSS3, JavaScript, React.js => coming soon
+- **Backend:** Node.js, Express.js            
 - **Database:** MongoDB
 - **Authentication:** JSON Web Tokens (JWT)
+- **Images** : multer => Cloudinary
+
 
 
 ## Getting Started
