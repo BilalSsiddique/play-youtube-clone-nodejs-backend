@@ -323,35 +323,109 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 });
 
 const updateUserCover = asyncHandler(async (req, res) => {
-  const coverImageLocalPath = req.file?.path;
-  if (!coverImageLocalPath) {
-    throw new ApiError(400, "Cover file is required.");
+  try {
+    const coverImageLocalPath = req.file?.path;
+    if (!coverImageLocalPath) {
+      throw new ApiError(400, "Cover file is required.");
+    }
+
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+
+    if (!coverImage?.url) {
+      throw new ApiError(400, "Error while uploading Cover Image.");
+    }
+
+    //delete previous cloudinary image of the user
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          coverImage: coverImage.url,
+        },
+      },
+      { new: true }
+    ).select("-password");
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, updatedUser, "Cover Image updated Successfully.")
+      );
+  } catch (error) {
+    return res
+      .status(400)
+      .json(
+        new ApiError(
+          400,
+          error?.message || "something went wrong while uploading Cover Image"
+        )
+      );
+  }
+});
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  //get channel name from url
+  const { username } = req.params;
+  console.log('rq',req)
+  if (!username) {
+    throw new ApiError(400, "username is required.");
   }
 
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
-  if (!coverImage?.url) {
-    throw new ApiError(400, "Error while uploading Cover Image.");
-  }
-
-  //delete previous cloudinary image of the user
-
-  
-  const updatedUser = await User.findByIdAndUpdate(
-    req.user?._id,
+  await User.aggregate([
     {
-      $set: {
-        cover: coverImage.url,
+      $match: {
+        username: username?.toLowerCase(),
       },
     },
-    { new: true }
-  ).select("-password");
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(200, updatedUser, "Cover Image updated Successfully.")
-    );
+    //get channel subscribers
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    //To get those whom the channel has subcribed to
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+      },
+      channelSubscribedToCount: {
+        $size: "$subscribedTo",
+      },
+      isSubscribed: {
+        $cond: {
+          if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+          then: true,
+          else: false,
+        },
+      },
+    },
+    {
+      $project: {
+        username: 1,
+        fullName: 1,
+        email: 1,
+        avatar: 1,
+        coverImage: 1,
+        subscriberCount: 1,
+        channelSubscribedToCount: 1,
+        isSubscribed: 1,
+      },
+    },
+  ]);
 });
 
 export {
@@ -363,5 +437,6 @@ export {
   changeUserPassword,
   updateAccountDetails,
   updateUserAvatar,
-  updateUserCover
+  updateUserCover,
+  getUserChannelProfile,
 };

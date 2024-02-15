@@ -7,6 +7,8 @@ import {
   updateAccountDetails,
   getCurrentUser,
   updateUserAvatar,
+  updateUserCover,
+  getUserChannelProfile,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -32,15 +34,17 @@ router.route("/refresh-token").post(refreshAccessToken);
 
 router.route("/get-current-user").get(verifyJWT, getCurrentUser);
 
-router.route("/update-account").post(verifyJWT, updateAccountDetails);
+router.route("/update-account").patch(verifyJWT, updateAccountDetails);
 
 router
   .route("/update-avatar")
-  .post([verifyJWT, upload.single("avatar")], updateUserAvatar);
+  .patch([verifyJWT, upload.single("avatar")], updateUserAvatar);
 
 router
   .route("/update-cover")
-  .post([verifyJWT, upload.single("cover")], updateUserAvatar);
+  .patch([verifyJWT, upload.single("cover")], updateUserCover);
+
+router.route('/c/:username').get(verifyJWT,getUserChannelProfile)
 
 
 export default router;
