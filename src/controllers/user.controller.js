@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -238,7 +239,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeUserPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
-  validation.validateUserFields(oldPassword,newPassword,'Both old and new passwords are required.')
+  validation.validateUserFields(
+    oldPassword,
+    newPassword,
+    "Both old and new passwords are required."
+  );
   const user = await User.findById(req.user?._id);
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
@@ -438,6 +443,61 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     );
 });
 
+const getUserWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      //get watch history of the currently logged in user so match for against
+      //his id.
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      //get videos details that are watched by the current/logged in user
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory", //already gets populated.
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            //to get owner of the videos that are matched above.
+            $lookup: {
+              from: "users",
+              localField: "owner", // (also a user) under videos => owner field
+              foreignField: "_id", //(user) under user => _id field 
+              as: "owner",
+              //get the required output
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          /*just to get the first object from 
+          the output array.*/
+          {
+            $addFields:{
+              owner:{
+                $first : "$owner"
+              }
+            }
+          }
+        ],
+      },
+    },
+  ]);
+
+  return res.status(200)
+  .json(
+    new ApiResponse(200,user.watchHistory,'Watch history fetched Successfully.')
+  )
+});
 export {
   registerUser,
   loginUser,
