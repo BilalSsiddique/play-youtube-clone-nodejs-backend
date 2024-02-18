@@ -1,9 +1,16 @@
 import { ApiError } from "./ApiError.js";
+import { isValidObjectId } from "mongoose";
 
 const validation = {
-  ValidateEmptyFields(...args) {
-    if (args.some((field) => field?.trim() === "")) {
-      throw new ApiError(400, "All fields are required.");
+  ValidateEmptyFields(obj) {
+    const objKeys = Object.keys(obj);
+    for (const field of objKeys) {
+      if (obj[field] && obj[field].trim() === "") {
+        throw new ApiError(400, `${field} is required.`);
+      }
+      if (!obj[field]) {
+        throw new ApiError(400, `${field} is required`);
+      }
     }
   },
 
@@ -22,37 +29,32 @@ const validation = {
     }
   },
 
-  validateCoverImageLocalPath(req) {
+  validateOptionalImageLocalPath(req, fileName) {
     if (
       req.files &&
-      Array.isArray(req.files.coverImage) &&
-      req.files.coverImage.length > 0
+      Array.isArray(req.files[fileName]) &&
+      req.files[fileName].length > 0
     ) {
-      return req.files.coverImage[0].path;
+      return req.files[fileName][0].path;
     } else {
       return "";
     }
   },
-  validateAvatarImageLocalPath(req) {
+
+  validateFilesImageLocalPath(req, fileName, message, stCode = 400) {
     if (
       req.files &&
-      Array.isArray(req.files.avatar) &&
-      req.files.avatar.length > 0
+      Array.isArray(req.files[fileName]) &&
+      req.files[fileName].length > 0
     ) {
-      return req.files.avatar[0].path;
+      return req.files[fileName][0].path;
     } else {
-      throw new ApiError(400, "Avatar file is required");
+      throw new ApiError(stCode, message);
     }
   },
-
-  validateUserFields(username, email,message) {
-    if (!username || !email) {
-      throw new ApiError(400,message);
-    }
-  },
-  validateUserPassword(password) {
-    if (!password) {
-      throw new ApiError(400, "password is required.");
+  validateMongoDBObjectId(id) {
+    if (!isValidObjectId(id)) {
+      throw new ApiError(400, "User Id is not valid.");
     }
   },
 };

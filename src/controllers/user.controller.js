@@ -41,7 +41,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const { username, fullName, email, password } = req.body;
 
   // validate fields
-  validation.ValidateEmptyFields(fullName, username, email, password);
+  validation.ValidateEmptyFields({ fullName, username, email, password });
   validation.validateStringLength(username, 4, 25);
 
   // check if user exists in database
@@ -53,8 +53,13 @@ const registerUser = asyncHandler(async (req, res) => {
   validation.validateExistingUser(existedUser);
 
   //validate localImageFilePath => means file are received from user or not.
-  const avatarImageLocalPath = validation.validateAvatarImageLocalPath(req);
-  const coverImageLocalPath = validation.validateCoverImageLocalPath(req);
+  const avatarImageLocalPath = validation.validateFilesImageLocalPath(
+    req,
+    "avatar",
+    "Avatar file is required.",
+    400
+  );
+  const coverImageLocalPath = validation.validateOptionalImageLocalPath(req);
 
   // upload to cloudinary
   const avatarImage = await uploadOnCloudinary(avatarImageLocalPath);
@@ -100,7 +105,7 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!email) {
     throw new ApiError(400, "email is required");
   }
-  validation.validateUserPassword(password);
+  validation.ValidateEmptyFields({ username, email, password });
 
   const user = await User.findOne({
     $or: [{ username }, { email }],
@@ -153,8 +158,8 @@ const logOutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined,
+      $unset: {
+        refreshToken: 1,
       },
     },
     {
@@ -239,11 +244,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeUserPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
-  validation.validateUserFields(
-    oldPassword,
-    newPassword,
-    "Both old and new passwords are required."
-  );
+  validation.ValidateEmptyFields({ oldPassword, newPassword });
+
   const user = await User.findById(req.user?._id);
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
@@ -277,7 +279,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   //depends what is allowed to be updated.
   const { fullName, email } = req.body;
 
-  validation.validateUserFields(fullName, email, "All fields are required.");
+  validation.ValidateEmptyFields({ fullName, email });
 
   //have to validate email
   const user = await User.findByIdAndUpdate(
@@ -465,7 +467,7 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
             $lookup: {
               from: "users",
               localField: "owner", // (also a user) under videos => owner field
-              foreignField: "_id", //(user) under user => _id field 
+              foreignField: "_id", //(user) under user => _id field
               as: "owner",
               //get the required output
               pipeline: [
@@ -482,22 +484,28 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
           /*just to get the first object from 
           the output array.*/
           {
-            $addFields:{
-              owner:{
-                $first : "$owner"
-              }
-            }
-          }
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
         ],
       },
     },
   ]);
 
-  return res.status(200)
-  .json(
-    new ApiResponse(200,user.watchHistory,'Watch history fetched Successfully.')
-  )
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "Watch history fetched Successfully."
+      )
+    );
 });
+
 export {
   registerUser,
   loginUser,
@@ -509,5 +517,5 @@ export {
   updateUserAvatar,
   updateUserCover,
   getUserChannelProfile,
-  getUserWatchHistory
+  getUserWatchHistory,
 };
