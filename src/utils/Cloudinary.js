@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+import { ApiError } from "./ApiError.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -23,4 +24,20 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export { uploadOnCloudinary };
+const deleteOnCloudinary = async (id) => {
+  if (!id) throw new ApiError(404,'Resource public Id is not provided');
+  try {
+    return await cloudinary.uploader.destroy(id);
+  } catch (error) {
+    throw new ApiError(500,'Something went wrong while deleting resource.')
+  }
+};
+
+function getPublicIdFromUrl(url) {
+  const parts = url.split("/");
+  const publicIdWithExtension = parts[parts.length - 1]; 
+  const publicId = publicIdWithExtension.split(".")[0]; 
+  return publicId;
+}
+
+export { uploadOnCloudinary, deleteOnCloudinary,getPublicIdFromUrl };

@@ -1,6 +1,9 @@
 import {
+  deleteVideoById,
   getAllVideos,
+  getVideoById,
   publishAVideo,
+  updateVideo,
 } from "../controllers/video.controller.js";
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -25,4 +28,9 @@ router.route("/").post(
   publishAVideo
 );
 
+router.route("/:videoId").get(getVideoById);
+
+router.route("/:videoId").delete(deleteVideoById);
+
+router.route("/:videoId").patch(upload.single("thumbnail"), updateVideo);
 export default router;

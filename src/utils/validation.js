@@ -40,6 +40,16 @@ const validation = {
       return "";
     }
   },
+  validateSingleImageLocalPath(req) {
+    if (
+      req.file &&
+      req.file.path 
+    ) {
+      return req.file.path;
+    } else {
+      return "";
+    }
+  },
 
   validateFilesImageLocalPath(req, fileName, message, stCode = 400) {
     if (
