@@ -41,10 +41,7 @@ const validation = {
     }
   },
   validateSingleImageLocalPath(req) {
-    if (
-      req.file &&
-      req.file.path 
-    ) {
+    if (req.file && req.file.path) {
       return req.file.path;
     } else {
       return "";
@@ -64,7 +61,7 @@ const validation = {
   },
   validateMongoDBObjectId(id) {
     if (!isValidObjectId(id)) {
-      throw new ApiError(400, "User Id is not valid.");
+      throw new ApiError(400, "Object Id is not valid.");
     }
   },
 };
