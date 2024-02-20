@@ -1,5 +1,6 @@
-# Play - YouTube Clone
+# `Play - YouTube Clone`
 
+## `FOLLOWED HITESH CHOUDHARY`
 ## ERD
 
 ![image](https://github.com/BilalSsiddique/play-youtube-clone-nodejs-backend/assets/64930024/271906e5-1916-42c1-9190-6ff113a1493c)
