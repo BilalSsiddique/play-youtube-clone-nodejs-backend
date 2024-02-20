@@ -3,6 +3,7 @@ import {
   getAllVideos,
   getVideoById,
   publishAVideo,
+  togglePublishStatus,
   updateVideo,
 } from "../controllers/video.controller.js";
 import { Router } from "express";
@@ -33,4 +34,6 @@ router.route("/:videoId").get(getVideoById);
 router.route("/:videoId").delete(deleteVideoById);
 
 router.route("/:videoId").patch(upload.single("thumbnail"), updateVideo);
+
+router.route("/toggle/publish/:videoId").patch(togglePublishStatus);
 export default router;

@@ -10,7 +10,6 @@ import {
   deleteOnCloudinary,
 } from "../utils/Cloudinary.js";
 
-
 const getPreviousVideo = async (videoId) => {
   const previousVideo = await Video.findOne({ _id: videoId });
   if (!previousVideo) {
@@ -24,7 +23,7 @@ const deletePreviousThumbnail = async (thumbnailUrl) => {
     const publicId = getPublicIdFromUrl(thumbnailUrl);
     const deletedFile = await deleteOnCloudinary(publicId);
 
-    console.log('deleteFile',deletedFile)
+    console.log("deleteFile", deletedFile);
     if (deletedFile && deletedFile.result === "not found") {
       throw new ApiError(404, "File not found for deleting");
     }
@@ -56,7 +55,6 @@ const updateVideoDetails = async (videoId, updateFields) => {
 
   return updatedVideoDetails;
 };
-
 
 const getAllVideos = asyncHandler(async (req, res) => {
   let { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -192,7 +190,6 @@ const updateVideo = asyncHandler(async (req, res) => {
 
   const previousVideo = await getPreviousVideo(videoId);
 
-  
   let updateFields = {
     $set: { title, description },
   };
@@ -220,10 +217,49 @@ const updateVideo = asyncHandler(async (req, res) => {
     );
 });
 
+const togglePublishStatus = asyncHandler(async (req, res) => {
+  //validate incoming ID
+  //find video if exists
+  //update its status (isPublished)
+  //return response
+
+  const { videoId } = req.params;
+  //validate videoId
+  validation.ValidateEmptyFields({ videoId });
+  validation.validateMongoDBObjectId(videoId);
+
+  const video = await Video.findById(videoId);
+
+  if (!video) {
+    throw new ApiError(404, "video not found.");
+  }
+
+  const isPublished = video.isPublished;
+
+  const updateVideo = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $set: {
+        isPublished: !isPublished,
+      },
+    },
+    { new: true }
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, updateVideo, "Video Status Changed Successfull")
+    );
+});
+
+
+
 export {
   getAllVideos,
   publishAVideo,
   getVideoById,
   deleteVideoById,
   updateVideo,
+  togglePublishStatus,
 };
